@@ -1,72 +1,91 @@
+# app.py
 import streamlit as st
 import pandas as pd
 from datetime import date
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-st.title("📊 Assessment Readiness Analyzer")
+# ------------------------
+# Firebase Initialization
+# ------------------------
+# Replace with path to your Firebase service account JSON
+FIREBASE_CRED_PATH = "serviceAccountKey.json"
 
+try:
+    cred = credentials.Certificate(FIREBASE_CRED_PATH)
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    FIREBASE_READY = True
+except Exception as e:
+    st.warning("Firebase not initialized. Email sync will not work.")
+    FIREBASE_READY = False
+
+# ------------------------
+# App Title
+# ------------------------
+st.title("📊 Enhanced Assessment Prioritizer")
 st.write(
-    "This application helps students evaluate how prepared they are "
-    "for an upcoming assessment based on time left and confidence levels."
+    "Prioritize subjects for revision based on scores, confidence, and tuition support."
 )
 
-assessment_date = st.date_input(
-    "Assessment date",
-    min_value=date.today()
+# ------------------------
+# Subject Input Section
+# ------------------------
+num_subjects = st.number_input(
+    "Number of subjects", min_value=1, max_value=10, step=1
 )
 
-days_left = (assessment_date - date.today()).days
+subjects = []
+for i in range(num_subjects):
+    st.subheader(f"Subject {i+1}")
+    name = st.text_input("Subject name", key=f"name_{i}")
+    score = st.number_input("Current score (0-100)", 0, 100, 50, key=f"score_{i}")
+    confidence = st.slider("Confidence (1-5)", 1, 5, 3, key=f"conf_{i}")
+    tuition = st.checkbox("Do you have tuition for this subject?", key=f"tuition_{i}")
 
-if days_left <= 3:
-    urgency_weight = 1.0
-elif days_left <= 7:
-    urgency_weight = 0.8
-elif days_left <= 14:
-    urgency_weight = 0.6
+    if name:
+        subjects.append([name, score, confidence, tuition])
+
+# ------------------------
+# Priority Calculation
+# ------------------------
+if subjects:
+    df = pd.DataFrame(subjects, columns=["Subject", "Score", "Confidence", "Tuition"])
+
+    # Tuition factor: reduces priority if tuition exists
+    df["Tuition Factor"] = df["Tuition"].apply(lambda x: 0.3 if x else 0)
+
+    # Priority formula: higher value = more urgent
+    df["Priority Score"] = (1 - df["Score"]/100) * (6 - df["Confidence"]) * (1 - df["Tuition Factor"])
+
+    # Sort descending: most urgent first
+    df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
+
+    # ------------------------
+    # Display Results
+    # ------------------------
+    st.subheader("📈 Subject Priority Table")
+    st.dataframe(df[["Subject", "Score", "Confidence", "Tuition", "Priority Score"]])
+
+    st.subheader("📊 Priority Chart")
+    st.bar_chart(df.set_index("Subject")["Priority Score"])
+
+    # ------------------------
+    # Save to Firebase
+    # ------------------------
+    if FIREBASE_READY:
+        if st.button("💾 Save Report to Firebase"):
+            try:
+                # Convert DataFrame to dict
+                report_data = df.to_dict(orient="records")
+                # Add timestamp
+                report_doc = {
+                    "date": date.today().isoformat(),
+                    "report": report_data
+                }
+                db.collection("revision_reports").add(report_doc)
+                st.success("Report saved to Firebase! You can trigger email notifications from Cloud Functions.")
+            except Exception as e:
+                st.error(f"Error saving to Firebase: {e}")
 else:
-    urgency_weight = 0.4
-
-st.subheader("📚 Topic Confidence Input")
-
-num_topics = st.number_input(
-    "Number of topics",
-    min_value=1,
-    max_value=10,
-    step=1
-)
-
-topics = []
-
-for i in range(int(num_topics)):
-    col1, col2 = st.columns(2)
-
-    with col1:
-        topic = st.text_input(f"Topic {i+1}")
-    with col2:
-        confidence = st.slider(
-            "Confidence (1–5)",
-            1, 5, 3,
-            key=f"conf_{i}"
-        )
-
-    if topic:
-        topics.append([topic, confidence])
-
-if topics:
-    df = pd.DataFrame(topics, columns=["Topic", "Confidence"])
-    df["Readiness Score"] = (df["Confidence"] / 5) * urgency_weight * 100
-
-    overall_readiness = df["Readiness Score"].mean()
-
-    st.subheader("📈 Results")
-    st.dataframe(df)
-
-    st.metric("Overall Readiness (%)", f"{overall_readiness:.1f}")
-
-    if overall_readiness >= 75:
-        st.success("Low Risk – You are well prepared.")
-    elif overall_readiness >= 50:
-        st.warning("Medium Risk – Focus on weaker topics.")
-    else:
-        st.error("High Risk – Immediate revision recommended.")
-
-    st.bar_chart(df.set_index("Topic")["Readiness Score"])
+    st.info("Enter at least one subject to calculate priority.")
