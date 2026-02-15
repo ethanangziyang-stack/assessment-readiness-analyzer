@@ -18,7 +18,7 @@ except Exception:
     FIREBASE_READY = False
 
 # App Title
-st.title("Enhanced Assessment Prioritizer")
+st.title("Assessment Prioritizer")
 st.write("Prioritize subjects for revision based on scores, confidence, tuition support, and available time.")
 
 # Time Input Section
