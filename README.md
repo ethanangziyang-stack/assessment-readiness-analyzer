@@ -11,6 +11,15 @@ Students in Singapore are expected to meet high academic standards across multip
 The Assessment Prioritizer was developed to address this problem by providing a structured, data-driven approach to study planning that balances academic rigour with student wellbeing.
 
 ---
+## How to Use the Application
+
+Users begin by entering key details about their daily routine, including the time they leave the house, reach home, and go to sleep. These inputs define a realistic window for study and ensure that revision is planned around daily commitments rather than at the expense of rest. The application also allows users to specify blocked periods, such as dinner time, which are automatically excluded from the study schedule.
+
+Next, students input their subjects one by one. For each subject, users select their current grade using standard Singapore grading bands (A1–F9), indicate their confidence level on a scale from 1 (least confident) to 5 (most confident), and state whether they have tuition support. These inputs reflect both academic performance and personal learning experiences.
+
+Once all data is entered, the app calculates a priority score for each subject and displays them in ranked order. Higher-priority subjects represent areas where the student is academically weaker or less confident and should therefore receive greater attention. Based on the available free time and preferred study session duration, the app then generates a suggested study schedule with non-overlapping sessions allocated sequentially.
+
+---
 
 ## Design Idea
 
