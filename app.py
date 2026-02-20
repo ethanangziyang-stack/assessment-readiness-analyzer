@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, time
 
 st.title("Assessment Prioritizer")
 st.write(
-    "This tool helps students prioritise revision subjects and plan study time "
+    "This app helps students prioritise revision subjects and plan study time "
     "while encouraging healthy routines aligned with Grow Well SG."
 )
 
@@ -33,7 +33,7 @@ today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 sleep_dt = datetime.combine(today, sleep_time)
 
-# Handle cross-midnight sleep
+# Handle cross-midnight sleep (Ethan Ang)
 if sleep_dt <= reach_dt:
     sleep_dt += timedelta(days=1)
 
@@ -42,14 +42,14 @@ dinner_end_dt = datetime.combine(today, dinner_end)
 if dinner_end_dt <= dinner_start_dt:
     dinner_end_dt += timedelta(days=1)
 
-# Sleep health warning
+# Sleep health warning ( Ethan Ang)
 if sleep_dt.time() > time(0, 0):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
         "before 10:30pm to support learning and wellbeing."
     )
 
-# Subject Input
+# Subject Input ( Ethan Woon)
 st.header("Subjects")
 
 grade_map = {
@@ -90,7 +90,7 @@ df = pd.DataFrame(
     subjects,
     columns=["Subject", "Grade", "Confidence", "Tuition"]
 )
-# Priority Logic (fixed)
+# Priority Logic (Ethan Ang)
 def calculate_priority(grade, confidence, tuition):
     grade_urgency = grade_map[grade]
     confidence_urgency = (5 - confidence) / 4
@@ -109,11 +109,11 @@ df["Priority Score"] = df.apply(
 
 df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
 
-# Display priorities
+# Display priorities (Ethan Ang)
 st.subheader("Subject Priority")
 st.dataframe(df)
 
-# Study Schedule (no overlap)
+# Study Schedule (Ethan Ang)
 st.header("Suggested Study Schedule")
 
 study_sessions = []
