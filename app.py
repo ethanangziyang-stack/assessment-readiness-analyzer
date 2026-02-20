@@ -8,9 +8,8 @@ st.write(
     "while encouraging healthy routines aligned with Grow Well SG."
 )
 
-# -----------------------------
 # Time Input
-# -----------------------------
+
 st.header("Daily Schedule")
 
 leave_house = st.time_input("Leave house time", time(8, 0))
@@ -27,9 +26,8 @@ session_minutes = st.number_input(
     step=10
 )
 
-# -----------------------------
+
 # Validate & normalise times
-# -----------------------------
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 sleep_dt = datetime.combine(today, sleep_time)
@@ -47,12 +45,10 @@ if dinner_end_dt <= dinner_start_dt:
 if sleep_dt.time() > time(0, 0):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
-        "between 10:30pm and 11:30pm to support learning and wellbeing."
+        "before 10:30pm to support learning and wellbeing."
     )
 
-# -----------------------------
 # Subject Input
-# -----------------------------
 st.header("Subjects")
 
 grade_map = {
@@ -93,10 +89,7 @@ df = pd.DataFrame(
     subjects,
     columns=["Subject", "Grade", "Confidence", "Tuition"]
 )
-
-# -----------------------------
 # Priority Logic (fixed)
-# -----------------------------
 def calculate_priority(grade, confidence, tuition):
     grade_urgency = grade_map[grade]
     confidence_urgency = (5 - confidence) / 4
@@ -115,15 +108,11 @@ df["Priority Score"] = df.apply(
 
 df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
 
-# -----------------------------
 # Display priorities
-# -----------------------------
 st.subheader("Subject Priority")
 st.dataframe(df)
 
-# -----------------------------
 # Study Schedule (no overlap)
-# -----------------------------
 st.header("Suggested Study Schedule")
 
 study_sessions = []
