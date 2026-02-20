@@ -1,3 +1,4 @@
+# Importing libraries (Ethan Ang)
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, time
@@ -8,7 +9,7 @@ st.write(
     "while encouraging healthy routines aligned with Grow Well SG."
 )
 
-# Time Input
+# Time Input (Lee Ren Jie)
 
 st.header("Daily Schedule")
 
@@ -27,7 +28,7 @@ session_minutes = st.number_input(
 )
 
 
-# Validate & normalise times
+# Validate & normalise times (Ethan Ang)
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 sleep_dt = datetime.combine(today, sleep_time)
