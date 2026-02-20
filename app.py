@@ -1,151 +1,156 @@
 import streamlit as st
 import pandas as pd
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, time
 
-# -----------------------------
-# App Title
-# -----------------------------
 st.title("Assessment Prioritizer")
 st.write(
-    "Prioritize subjects for revision based on scores, confidence, tuition support, and available time."
+    "This tool helps students prioritise revision subjects and plan study time "
+    "while encouraging healthy routines aligned with Grow Well SG."
 )
 
 # -----------------------------
-# Time Input Section
+# Time Input
 # -----------------------------
-st.header("Daily Schedule Input")
+st.header("Daily Schedule")
 
-leave_house_time = st.time_input(
-    "Leave House Time",
-    value=datetime.strptime("08:00", "%H:%M").time()
+leave_house = st.time_input("Leave house time", time(8, 0))
+reach_home = st.time_input("Reach home time", time(17, 0))
+sleep_time = st.time_input("Sleep time", time(23, 0))
+
+dinner_start = st.time_input("Dinner start time", time(19, 0))
+dinner_end = st.time_input("Dinner end time", time(19, 45))
+
+session_minutes = st.number_input(
+    "Preferred study duration per session (minutes)",
+    min_value=20,
+    max_value=120,
+    step=10
 )
-
-reach_home_time = st.time_input(
-    "Reach Home Time",
-    value=datetime.strptime("15:30", "%H:%M").time()
-)
-
-sleep_time = st.time_input(
-    "Sleep Time",
-    value=datetime.strptime("22:00", "%H:%M").time()
-)
-
-preferred_study_duration = st.number_input(
-    "Preferred duration per study session (minutes)",
-    min_value=15,
-    max_value=180,
-    step=15
-)
-
-# Calculate free time window
-free_start = datetime.combine(datetime.today(), reach_home_time)
-free_end = datetime.combine(datetime.today(), sleep_time)
-
-if free_end <= free_start:
-    st.error("Sleep time must be after reach home time.")
-    free_slots = []
-else:
-    free_slots = [(free_start, free_end)]
 
 # -----------------------------
-# Subject Input Section
+# Validate & normalise times
 # -----------------------------
-st.header("Subject Input")
+today = datetime.today().date()
+reach_dt = datetime.combine(today, reach_home)
+sleep_dt = datetime.combine(today, sleep_time)
 
-num_subjects = st.number_input(
-    "Number of subjects",
-    min_value=1,
-    max_value=10,
-    step=1
-)
+# Handle cross-midnight sleep
+if sleep_dt <= reach_dt:
+    sleep_dt += timedelta(days=1)
 
+dinner_start_dt = datetime.combine(today, dinner_start)
+dinner_end_dt = datetime.combine(today, dinner_end)
+if dinner_end_dt <= dinner_start_dt:
+    dinner_end_dt += timedelta(days=1)
+
+# Sleep health warning
+if sleep_dt.time() > time(0, 0):
+    st.warning(
+        "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
+        "between 10:30pm and 11:30pm to support learning and wellbeing."
+    )
+
+# -----------------------------
+# Subject Input
+# -----------------------------
+st.header("Subjects")
+
+grade_map = {
+    "A1": 0.05, "A2": 0.10,
+    "B3": 0.25, "B4": 0.35,
+    "C5": 0.50, "C6": 0.60,
+    "D7": 0.75, "E8": 0.85,
+    "F9": 1.00
+}
+
+num_subjects = st.number_input("Number of subjects", 1, 10, 1)
 subjects = []
 
 for i in range(num_subjects):
     st.subheader(f"Subject {i + 1}")
 
     name = st.text_input("Subject name", key=f"name_{i}")
-    score = st.number_input(
-        "Current score (0–100)",
-        0,
-        100,
-        50,
-        key=f"score_{i}"
+    grade = st.selectbox(
+        "Current grade",
+        list(grade_map.keys()),
+        key=f"grade_{i}"
     )
     confidence = st.slider(
-        "Confidence (1–5)",
-        1,
-        5,
-        3,
+        "Confidence (1 = least confident, 5 = most confident)",
+        1, 5, 3,
         key=f"conf_{i}"
     )
-    tuition = st.checkbox(
-        "Do you have tuition for this subject?",
-        key=f"tuition_{i}"
-    )
+    tuition = st.checkbox("Has tuition support", key=f"tuition_{i}")
 
-    if name:
-        subjects.append([name, score, confidence, tuition])
+    if name.strip():
+        subjects.append([name, grade, confidence, tuition])
+
+if not subjects:
+    st.info("Please enter at least one subject.")
+    st.stop()
+
+df = pd.DataFrame(
+    subjects,
+    columns=["Subject", "Grade", "Confidence", "Tuition"]
+)
 
 # -----------------------------
-# Priority Calculation
+# Priority Logic (fixed)
 # -----------------------------
-if subjects:
-    df = pd.DataFrame(
-        subjects,
-        columns=["Subject", "Score", "Confidence", "Tuition"]
-    )
+def calculate_priority(grade, confidence, tuition):
+    grade_urgency = grade_map[grade]
+    confidence_urgency = (5 - confidence) / 4
 
-    # Tuition slightly reduces urgency (not dominant)
-    df["Tuition Factor"] = df["Tuition"].apply(lambda x: 0.3 if x else 0)
+    base = (0.6 * grade_urgency) + (0.4 * confidence_urgency)
+    modifier = 0.85 if tuition else 1.0
 
-    df["Priority Score"] = (
-        (1 - df["Score"] / 100)
-        * (6 - df["Confidence"])
-        * (1 - df["Tuition Factor"])
-    )
+    return round(base * modifier, 3)
 
-    df = df.sort_values(
-        "Priority Score",
-        ascending=False
-    ).reset_index(drop=True)
+df["Priority Score"] = df.apply(
+    lambda r: calculate_priority(
+        r["Grade"], r["Confidence"], r["Tuition"]
+    ),
+    axis=1
+)
 
-    # -----------------------------
-    # Display Results
-    # -----------------------------
-    st.subheader("Subject Priority Table")
-    st.dataframe(
-        df[["Subject", "Score", "Confidence", "Tuition", "Priority Score"]]
-    )
+df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
 
-    st.subheader("Priority Chart")
-    st.bar_chart(df.set_index("Subject")["Priority Score"])
+# -----------------------------
+# Display priorities
+# -----------------------------
+st.subheader("Subject Priority")
+st.dataframe(df)
 
-    # -----------------------------
-    # Study Schedule Allocation
-    # -----------------------------
-    st.header("Suggested Study Schedule")
+# -----------------------------
+# Study Schedule (no overlap)
+# -----------------------------
+st.header("Suggested Study Schedule")
 
-    study_sessions = []
-    session_duration = timedelta(minutes=preferred_study_duration)
-    current_time = free_start
+study_sessions = []
+current_time = reach_dt
+session_delta = timedelta(minutes=session_minutes)
 
-    for _, row in df.iterrows():
-        if current_time + session_duration > free_end:
-            break
+for _, row in df.iterrows():
+    if current_time >= sleep_dt:
+        break
 
-        study_sessions.append({
-            "Subject": row["Subject"],
-            "Start": current_time.strftime("%H:%M"),
-            "End": (current_time + session_duration).strftime("%H:%M")
-        })
+    # Skip dinner
+    if dinner_start_dt <= current_time < dinner_end_dt:
+        current_time = dinner_end_dt
 
-        current_time += session_duration
+    end_time = current_time + session_delta
+    if end_time > sleep_dt:
+        break
 
-    if study_sessions:
-        st.dataframe(pd.DataFrame(study_sessions))
-    else:
-        st.info("No study sessions could be scheduled within your available free time.")
+    study_sessions.append({
+        "Subject": row["Subject"],
+        "Start": current_time.strftime("%H:%M"),
+        "End": end_time.strftime("%H:%M")
+    })
 
+    current_time = end_time
+
+if study_sessions:
+    st.dataframe(pd.DataFrame(study_sessions))
 else:
-    st.info("Enter at least one subject to calculate priority.")
+    st.info("No study sessions could be scheduled within your available time.")
