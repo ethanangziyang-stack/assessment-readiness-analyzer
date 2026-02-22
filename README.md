@@ -4,7 +4,7 @@
 
 ---
 
-## Problem Statement
+## Problem Statement (chatgpt used in 1st paragraph to make it sound more enticing)
 
 Students in Singapore are expected to meet high academic standards across multiple subjects. While many students rely on informal planning or hard set timetables, these approaches often fail to account for individual academic weaknesses, confidence levels, and the presence of external academic support such as tuition. As a result, students may spend excessive time on subjects they are already strong in, neglect weaker areas, or engage in unhealthy late-night studying that negatively impacts long-term performance. Therefore, How can we help unmotivated, sleep deprived and confused students get back on track while being constantly motivated to keep interest levels high whilst still prioritising sleep in alighnment with Grow well SG and maintaining high expectations?
 
