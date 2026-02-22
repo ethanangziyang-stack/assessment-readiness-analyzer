@@ -9,8 +9,7 @@ st.write(
     "while encouraging healthy routines aligned with Grow Well SG."
 )
 
-# Time Input (Lee Ren Jie)
-
+# daily schedule (ethan ang)
 st.header("Daily Schedule")
 
 leave_house = st.time_input("Leave house time", time(8, 0))
@@ -27,13 +26,12 @@ session_minutes = st.number_input(
     step=10
 )
 
-
-# Validate & normalise times (Ethan Ang)
+# setting time (ethan ang)
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 sleep_dt = datetime.combine(today, sleep_time)
 
-# Handle cross-midnight sleep (Ethan Ang)
+#Fix cross midnight problem (ethan ang, chat gpt used for debugging and logic error in line 35 - 41)
 if sleep_dt <= reach_dt:
     sleep_dt += timedelta(days=1)
 
@@ -42,14 +40,14 @@ dinner_end_dt = datetime.combine(today, dinner_end)
 if dinner_end_dt <= dinner_start_dt:
     dinner_end_dt += timedelta(days=1)
 
-# Sleep health warning ( Ethan Ang)
-if sleep_dt.time() > time(0, 0):
+# growwellsg sleep warning (lee ren jie)
+if sleep_time > time(22, 30):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
         "before 10:30pm to support learning and wellbeing."
     )
 
-# Subject Input ( Ethan Woon)
+# subject input(ethan woon)
 st.header("Subjects")
 
 grade_map = {
@@ -90,7 +88,8 @@ df = pd.DataFrame(
     subjects,
     columns=["Subject", "Grade", "Confidence", "Tuition"]
 )
-# Priority Logic (Ethan Ang)
+
+# priority (ethan ang)
 def calculate_priority(grade, confidence, tuition):
     grade_urgency = grade_map[grade]
     confidence_urgency = (5 - confidence) / 4
@@ -108,23 +107,41 @@ df["Priority Score"] = df.apply(
 )
 
 df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
-
-# Display priorities (Ethan Ang)
 st.subheader("Subject Priority")
 st.dataframe(df)
 
-# Study Schedule (Ethan Ang)
+# output schedule (lee ren jie)
 st.header("Suggested Study Schedule")
+
+# Calculate available study time (lee ren jie)
+available_minutes = int((sleep_dt - reach_dt).total_seconds() / 60)
+
+# Subtract dinner duration (lee ren jie)
+dinner_minutes = int((dinner_end_dt - dinner_start_dt).total_seconds() / 60)
+available_minutes -= dinner_minutes
+
+max_sessions = available_minutes // session_minutes
 
 study_sessions = []
 current_time = reach_dt
 session_delta = timedelta(minutes=session_minutes)
 
-for _, row in df.iterrows():
+# prioritising subjects if there is not enough time (ethan ang)
+if max_sessions < len(df):
+    st.warning(
+        "⚠️ There is not enough time to revise all subjects today. "
+        "Only your weakest subject has been prioritised. "
+        "Consider sleeping earlier to free up more study time."
+    )
+    df_to_schedule = df.head(1)
+else:
+    df_to_schedule = df
+
+for _, row in df_to_schedule.iterrows():
     if current_time >= sleep_dt:
         break
 
-    # Skip dinner
+    # Skip dinner time
     if dinner_start_dt <= current_time < dinner_end_dt:
         current_time = dinner_end_dt
 
