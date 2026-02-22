@@ -35,7 +35,7 @@ sleep_time = st.time_input("Sleep time", time(23, 0))
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 
-sleep_time = st.time_input("Sleep time", time(23, 0))
+sleep_time = st.time_input("Sleep time", time(23, 0), key="sleep_time_input") # chatgpt used to add a key to fix error)
 sleep_dt = datetime.combine(today, sleep_time)  
 sleep_dt += timedelta(days=1)
 
