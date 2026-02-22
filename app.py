@@ -29,18 +29,23 @@ session_minutes = st.number_input(
 # setting time (ethan ang)
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
-sleep_dt = datetime.combine(today, sleep_time)
+sleep_time = st.time_input("Sleep time", time(23, 0))
 
 #Fix cross midnight problem (ethan ang, chat gpt used for debugging and logic error in line 35 - 41)
-if sleep_dt <= reach_dt:
-    sleep_dt += timedelta(days=1)
+today = datetime.today().date()
+reach_dt = datetime.combine(today, reach_home)
+
+sleep_time = st.time_input("Sleep time", time(23, 0))
+sleep_dt = datetime.combine(today, sleep_time)  
+sleep_dt += timedelta(days=1)
 
 dinner_start_dt = datetime.combine(today, dinner_start)
 dinner_end_dt = datetime.combine(today, dinner_end)
 if dinner_end_dt <= dinner_start_dt:
     dinner_end_dt += timedelta(days=1)
 
-# growwellsg sleep warning (lee ren jie)
+# Grow Well SG sleep warning (lee ren jie)
+# ✅ Triggers ONLY if sleep time is after 10:30pm
 if sleep_time > time(22, 30):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
