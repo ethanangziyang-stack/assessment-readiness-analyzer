@@ -29,7 +29,6 @@ session_minutes = st.number_input(
 # setting time (ethan ang)
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
-sleep_time = st.time_input("Sleep time", time(23, 0))
 
 #Fix cross midnight problem (ethan ang, chat gpt used for debugging and logic error in line 35 - 41)
 today = datetime.today().date()
