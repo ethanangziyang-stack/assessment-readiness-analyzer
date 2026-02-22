@@ -44,7 +44,6 @@ if dinner_end_dt <= dinner_start_dt:
     dinner_end_dt += timedelta(days=1)
 
 # Grow Well SG sleep warning (lee ren jie)
-# ✅ Triggers ONLY if sleep time is after 10:30pm
 if sleep_time > time(22, 30):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
