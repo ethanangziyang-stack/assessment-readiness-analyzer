@@ -1,4 +1,4 @@
-# Importing libraries (Ethan Ang)
+# Importing libraries 
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, time
@@ -9,7 +9,7 @@ st.write(
     "while encouraging healthy routines aligned with Grow Well SG."
 )
 
-# daily schedule (ethan ang)
+# daily schedule 
 st.header("Daily Schedule")
 
 leave_house = st.time_input("Leave house time", time(8, 0))
@@ -26,7 +26,7 @@ session_minutes = st.number_input(
     step=10
 )
 
-# setting time (ethan ang)
+# setting time
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 
@@ -42,7 +42,7 @@ dinner_end_dt = datetime.combine(today, dinner_end)
 if dinner_end_dt <= dinner_start_dt:
     dinner_end_dt += timedelta(days=1)
 
-# Grow Well SG sleep warning (lee ren jie)
+# Grow Well SG sleep warning
 if sleep_time > time(22, 30):
     st.warning(
         "Your sleep time is quite late. Grow Well SG recommends consistent sleep "
@@ -91,7 +91,7 @@ df = pd.DataFrame(
     columns=["Subject", "Grade", "Confidence", "Tuition"]
 )
 
-# priority (ethan ang)
+# priority 
 def calculate_priority(grade, confidence, tuition):
     grade_urgency = grade_map[grade]
     confidence_urgency = (5 - confidence) / 4
@@ -112,13 +112,13 @@ df = df.sort_values("Priority Score", ascending=False).reset_index(drop=True)
 st.subheader("Subject Priority")
 st.dataframe(df)
 
-# output schedule (lee ren jie)
+# output schedule
 st.header("Suggested Study Schedule")
 
-# Calculate available study time (lee ren jie)
+# Calculate available study time 
 available_minutes = int((sleep_dt - reach_dt).total_seconds() / 60)
 
-# Subtract dinner duration (lee ren jie)
+# Subtract dinner duration
 dinner_minutes = int((dinner_end_dt - dinner_start_dt).total_seconds() / 60)
 available_minutes -= dinner_minutes
 
@@ -128,7 +128,7 @@ study_sessions = []
 current_time = reach_dt
 session_delta = timedelta(minutes=session_minutes)
 
-# prioritising subjects if there is not enough time (ethan ang)
+# prioritising subjects if there is not enough time 
 if max_sessions < len(df):
     st.warning(
         " There is not enough time to revise all subjects today. "
