@@ -30,7 +30,6 @@ session_minutes = st.number_input(
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 
-#Fix cross midnight problem (ethan ang, chat gpt used for debugging and logic error in line 35 - 41)
 today = datetime.today().date()
 reach_dt = datetime.combine(today, reach_home)
 
@@ -132,7 +131,7 @@ session_delta = timedelta(minutes=session_minutes)
 # prioritising subjects if there is not enough time (ethan ang)
 if max_sessions < len(df):
     st.warning(
-        "⚠️ There is not enough time to revise all subjects today. "
+        " There is not enough time to revise all subjects today. "
         "Only your weakest subject has been prioritised. "
         "Consider sleeping earlier to free up more study time."
     )
